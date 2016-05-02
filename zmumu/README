@@ -1,0 +1,19 @@
+addWeight (only for MC)
+
+cleanPairs.cxx++
+reads rootfiles after addWeight script
+root -b -q -l theFile.root cleanPairs.cxx+
+(if segmenatation violation then eosmount)
+
+/afs/cern.ch/user/a/agrebeny/eos/cms/store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp
+
+MC:   test_WithWeights_smallMCstat.root
+      test_WithWeights.root 
+Data: TnP_data_doubleMuonPart_tot123.root
+
+-- run python files from:
+~/CMSSW_7_4_7/src/MuonAnalysis/TagAndProbe/test/zmumu/python
+
+root -b -q -l recupThePlots.C 
+
+

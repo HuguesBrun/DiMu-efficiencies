@@ -1,0 +1,138 @@
+
+working dir:
+
+~/CMSSW_7_4_7/src/MuonAnalysis/TagAndProbe/test/zmumu
+
+
+1) reweighting
+
+-- to reweight Lumi (double mu data to single mu data):
+
+    root.exe -b -l -q /afs/cern.ch/user/a/agrebeny/eos/cms/store/group/phys_muon/agrebeny/totalData.root /afs/cern.ch/user/a/agrebeny/eos/cms/store/group/phys_muon/agrebeny/singleMutotv41RunD.root addWeights_forLumi.cxx+
+
+    /store/group/phys_muon/agrebeny/singleMutotv41RunD.root - it is the merge of these single mu files of RunD
+    /store/group/phys_muon/TagAndProbe/76XtreeProduction/v41/TnPTree_v41_76X_RunD_part*.root
+
+    output is here: store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp/test_data_lumirew.root
+
+--  double-mu: to reweight vertices MC to data (taking into account Lumi weight)
+
+    root.exe -b -l -q  /afs/cern.ch/user/a/agrebeny/eos/cms/store/group/phys_muon/agrebeny/totalMC.root  /afs/cern.ch/user/a/agrebeny/eos/cms/store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp/test_data_lumirew.root addWeights.cxx+
+
+    output is here: store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp/test_WithWeights_new_Lumi.root
+
+
+2)  run cleanPairs script
+cleanPairs.cxx++ reads rootfiles after addWeight script
+
+--  to run on reweighted (NVtx) MC:
+    root -b -q -l  /afs/cern.ch/user/a/agrebeny/eos/cms/store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp/test_WithWeights_new_Lumi.root cleanPairs.cxx++ 
+
+   output: /store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp/tnpZ_theTreeCleaned_MC_eff_new.root
+
+-- to run on reweighted (Lumi) data:
+
+   root -b -q -l  /afs/cern.ch/user/a/agrebeny/eos/cms/store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp/test_data_lumirew.root cleanPairs.cxx++
+
+   output: /store/group/phys_smp/VJets/Bonzai13TeVoutput/tmp/tnpZ_theTreeCleaned_data_eff_new.root
+
+3)  run the fitting (python files)
+
+    --- to get the efficiency of Mu17 (MC):
+
+    cmsRun fitMuonTriggerNew_Mu17eff.py mc_weight
+
+    --- to get the efficiency of Mu17 (data):
+
+    cmsRun fitMuonTriggerNew_Mu17eff_data.py data_weightLumi
+
+    --- to get the efficiency of Mu17Mu8 (MC):
+
+    cmsRun fitMuonTriggerNew_Mu17Mu8.py mc_weight
+
+    --- to get the efficiency of Mu17Mu8 (data):
+
+     cmsRun fitMuonTriggerNew_Mu17Mu8_data.py data_weightLumi
+
+    // for double-mu paths (fitMuonTriggerNew_Mu17Mu8.py, fitMuonTriggerNew_Mu17Mu8_data.py) run 
+    // the python files for different paths configurations:
+    // EffMu17Mu8, EffMu17Mu8nodz, EffMu17TkMu8, EffMu17TkMu8nodz, pathOr, pathOrnodz
+    // for their definition pls see cleanPairs
+
+4) recupation plots to extract 2D plots
+   root -b -q -l recupThePlots.C
+
+   // for that I make a new dir where I copy the root files for Mu17 and Mu17Mu8 for both data and MC
+   // for example see for 'pathOr':
+   
+   ~/CMSSW_7_4_7/src/MuonAnalysis/TagAndProbe/test/zmumu/originalHistoOr
+   // originalHistoOr, originalHistoTk,  originalHisto - in these directories the latest files for 'EffMu17Mu8', 'EffMu17TkMu8', and 'pathOr' as a 
+   // function  of eta are stored 
+   // originalHistoOr_pt_pathOr - the files for pathOr as a function of pt
+    
+   // one need to change in the recupThePlots.C whether you read data or MC (line 22) and the path to root files (line 5) and output name (line 6)
+   // to run:  
+   root -b -q -l recupThePlots.C
+   // output for 'pathOr':  output_mcOr.root and output_dataOr.root
+    
+
+
+5) plotting:
+
+ 
+~/CMSSW_7_4_7/src/MuonAnalysis/TagAndProbe/test/zmumu/plotScripts
+
+!!!!!!NB: all the scripts in this directory work only in old ROOT version (i.e for cms release CMSSW_7_4_0_pre9).
+One need to adopt them for the new root ot use an old release to run then 'root ScriptName.C'
+
+
+eff_pathor.C uses output of recupThePlots.C (output_mcOr.root, output_dataOr.root)
+one can run by: root eff_pathor.C
+
+-- to plot the SF matrix:
+ uncomment line 246-273 in eff_pathor.C, depending on whether you run on data or MC
+ then run eff_pathor_SF.C
+
+
+please see also eff_Mu17TkMu8.C and eff_Mu17Mu8.C if you plot the efficiency for 'EffMu17Mu8' or 'EffMu17TkMu8'
+
+
+
+6)  closure test
+// for MC closure test please see 
+~/CMSSW_7_4_7/src/MuonAnalysis/TagAndProbe/test/zmumu/plotScripts/closure_test.C
+
+// it uses root histo writen in CleanPair code
+
+
+
+----------------- efficiencies as a function of pt ------------------------------------------------
+python files:
+
+--Data
+fitMuonTriggerNew_Mu17Mu8_pt_data.py
+fitMuonTriggerNew_Mu17eff_pt_data.py
+
+--MC
+fitMuonTriggerNew_Mu17eff_pt_mc.py
+fitMuonTriggerNew_Mu17Mu8_pt_mc.py
+
+
+// recupation plots to extract 2D plots
+   root -b -q -l recupThePlots.C
+~/CMSSW_7_4_7/src/MuonAnalysis/TagAndProbe/test/zmumu/originalHistoOr_pt_EffMu17TkMu8
+or originalHistoOr_pt_EffMu17Mu8, or originalHistoOr_pt_pathOr
+
+// plotting script, which read the output of recupThePlots.C
+eff_EffMu17TkMu8_pt.C
+eff_pathOr_pt.C
+
+
+for SF:
+eff_pathor_SF.C 
+
+-------- my talks on HLT meetings: ---------
+
+/afs/cern.ch/user/a/agrebeny/public/HLTMuon/talks
+
+
